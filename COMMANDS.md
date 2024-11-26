@@ -20,6 +20,7 @@ export LLAMA_STACK_PORT=5001
 export INFERENCE_MODEL=meta-llama/Llama-3.2-3B-Instruct
 export INFERENCE_PORT=8000
 export VLLM_URL=http://localhost:8000/v1
+export FIREWORKS_API_KEY=
 
 # Remote vLLM
 sudo docker run \
@@ -84,4 +85,8 @@ llama stack build --template remote-vllm --image-type conda && llama stack run r
   --env INFERENCE_MODEL=meta-llama/Llama-3.2-3B-Instruct
 
 python json_schema.py
+
+pip install pytest pytest_asyncio aiohttp ollama fairscale transformers torch accelerate zmq lm-format-enforcer blobfile torchvision fireworks-ai
+
+pytest -v -s llama_stack/providers/tests/inference/test_text_inference.py -k llama_3b-vllm_remote
 ```
