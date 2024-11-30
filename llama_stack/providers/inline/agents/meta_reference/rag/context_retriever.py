@@ -30,6 +30,7 @@ async def generate_rag_query(
     """
     if config.type == MemoryQueryGenerator.default.value:
         query = await default_rag_query_generator(config, messages, **kwargs)
+        print("query: ", query)
     elif config.type == MemoryQueryGenerator.llm.value:
         query = await llm_rag_query_generator(config, messages, **kwargs)
     else:
