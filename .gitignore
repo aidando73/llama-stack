@@ -18,3 +18,5 @@ Package.resolved
 .vscode
 _build
 docs/src
+faiss-env/
+envs/
