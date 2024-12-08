@@ -23,6 +23,9 @@ from llama_models.llama3.api.tokenizer import Tokenizer
 
 from llama_stack.apis.memory import *  # noqa: F403
 
+from llama_index.core.node_parser.text import SentenceSplitter
+
+
 log = logging.getLogger(__name__)
 
 ALL_MINILM_L6_V2_DIMENSION = 384
@@ -122,16 +125,38 @@ async def content_from_doc(doc: MemoryBankDocument) -> str:
 def make_overlapped_chunks(
     document_id: str, text: str, window_len: int, overlap_len: int
 ) -> List[Chunk]:
+    # from docling.document_converter import DocumentConverter, DocumentStream
+    # from io import BytesIO
+
+    # converter = DocumentConverter()
+
+    # # Convert document
+    # buf = BytesIO(text.encode('utf-8'))
+    # source = DocumentStream(name="my_doc.pdf", stream=buf)
+    # doc = converter.convert(source)
+    # text = doc.document.export_to_text()
+
     tokenizer = Tokenizer.get_instance()
-    tokens = tokenizer.encode(text, bos=False, eos=False)
+
+    chunker = SentenceSplitter(chunk_size=window_len, chunk_overlap=overlap_len)
+    text_chunks = chunker.split_text(text)
 
     chunks = []
-    for i in range(0, len(tokens), window_len - overlap_len):
-        toks = tokens[i : i + window_len]
-        chunk = tokenizer.decode(toks)
+    for chunk in text_chunks:
+        tokens = tokenizer.encode(chunk, bos=False, eos=False)
         chunks.append(
-            Chunk(content=chunk, token_count=len(toks), document_id=document_id)
+            Chunk(content=chunk, token_count=len(tokens), document_id=document_id)
         )
+
+    # tokens = tokenizer.encode(text, bos=False, eos=False)
+
+    # chunks = []
+    # for i in range(0, len(tokens), window_len - overlap_len):
+    #     toks = tokens[i : i + window_len]
+    #     chunk = tokenizer.decode(toks)
+    #     chunks.append(
+    #         Chunk(content=chunk, token_count=len(toks), document_id=document_id)
+    #     )
 
     return chunks
 

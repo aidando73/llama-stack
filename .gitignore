@@ -18,3 +18,13 @@ Package.resolved
 .vscode
 _build
 docs/src
+envs/
+faiss-env/
+faiss_index.json
+faiss_index_squad.json
+faiss_index_quac.json
+faiss_store.db
+log-140-245-13-164
+faiss_index_narrativeqa_sentence.json
+faiss_index_narrativeqa_full_fixed.json
+faiss_index_narrativeqa_full_sentence.json
