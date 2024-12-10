@@ -154,6 +154,7 @@ class FaissMemoryImpl(Memory, MemoryBanksProtocolPrivate):
         self,
         memory_bank: MemoryBank,
     ) -> None:
+        print("memory_bank", memory_bank)
         assert (
             memory_bank.memory_bank_type == MemoryBankType.vector.value
         ), f"Only vector banks are supported {memory_bank.type}"

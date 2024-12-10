@@ -43,7 +43,7 @@ def available_providers() -> List[ProviderSpec]:
         InlineProviderSpec(
             api=Api.memory,
             provider_type="inline::faiss",
-            pip_packages=EMBEDDING_DEPS + ["faiss-cpu"],
+            pip_packages=EMBEDDING_DEPS + ["faiss-cpu", "llama-index", "docling"],
             module="llama_stack.providers.inline.memory.faiss",
             config_class="llama_stack.providers.inline.memory.faiss.FaissImplConfig",
         ),

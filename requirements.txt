@@ -11,3 +11,4 @@ requests
 rich
 setuptools
 termcolor
+datasets

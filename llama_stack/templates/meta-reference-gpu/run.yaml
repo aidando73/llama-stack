@@ -24,9 +24,10 @@ providers:
     provider_type: inline::faiss
     config:
       kvstore:
-        type: sqlite
-        namespace: null
-        db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/meta-reference-gpu}/faiss_store.db
+        type: redis
+        # type: sqlite
+        # namespace: null
+        # db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/meta-reference-gpu}/faiss_store.db
   safety:
   - provider_id: llama-guard
     provider_type: inline::llama-guard
