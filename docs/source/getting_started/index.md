@@ -118,6 +118,7 @@ async def run_main():
         model=os.environ["INFERENCE_MODEL"],
         instructions="You are a helpful assistant",
         tools=[{"type": "memory"}],  # enable Memory aka RAG
+        enable_session_persistence=True,
     )
 
     agent = Agent(client, agent_config)
