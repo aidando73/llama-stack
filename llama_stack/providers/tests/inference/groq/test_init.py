@@ -1,4 +1,3 @@
-
 import pytest
 
 from llama_stack.providers.remote.inference.ollama import OllamaImplConfig
@@ -15,7 +14,7 @@ class TestGroqInit:
 
         with pytest.raises(RuntimeError):
             await get_adapter_impl(config, None)
-    
+
     @pytest.mark.asyncio
     async def test_returns_groq_adapter(self):
         config = GroqConfig()
