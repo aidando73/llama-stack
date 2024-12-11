@@ -5,6 +5,8 @@ from llama_stack.providers.remote.inference.ollama import OllamaImplConfig
 from llama_stack.providers.remote.inference.groq import get_adapter_impl
 from llama_stack.providers.remote.inference.groq.config import GroqConfig
 from llama_stack.providers.remote.inference.groq.groq import GroqInferenceAdapter
+from llama_stack.apis.inference import Inference
+
 
 class TestGroqInit:
     @pytest.mark.asyncio
@@ -18,4 +20,5 @@ class TestGroqInit:
     async def test_returns_groq_adapter(self):
         config = GroqConfig()
         adapter = await get_adapter_impl(config, None)
-        assert isinstance(adapter, GroqInferenceAdapter)
+        assert type(adapter) is GroqInferenceAdapter
+        assert isinstance(adapter, Inference)
