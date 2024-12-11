@@ -44,6 +44,11 @@ def get_embedding_model(model: str) -> "SentenceTransformer":
     EMBEDDING_MODELS[model] = loaded_model
     return loaded_model
 
+def parse_pdf(data: bytes) -> str:
+    # For PDF and DOC/DOCX files, we can't reliably convert to string
+    pdf_bytes = io.BytesIO(data)
+    pdf_reader = PdfReader(pdf_bytes)
+    return "\n".join([page.extract_text() for page in pdf_reader.pages])
 
 def parse_data_url(data_url: str):
     data_url_pattern = re.compile(
@@ -88,10 +93,7 @@ def content_from_data(data_url: str) -> str:
         return data.decode(encoding)
 
     elif mime_type == "application/pdf":
-        # For PDF and DOC/DOCX files, we can't reliably convert to string)
-        pdf_bytes = io.BytesIO(data)
-        pdf_reader = PdfReader(pdf_bytes)
-        return "\n".join([page.extract_text() for page in pdf_reader.pages])
+        return parse_pdf(data)
 
     else:
         log.error("Could not extract content from data_url properly.")
@@ -99,12 +101,16 @@ def content_from_data(data_url: str) -> str:
 
 
 async def content_from_doc(doc: MemoryBankDocument) -> str:
+    print("doc ", doc)
     if isinstance(doc.content, URL):
         if doc.content.uri.startswith("data:"):
             return content_from_data(doc.content.uri)
         else:
             async with httpx.AsyncClient() as client:
                 r = await client.get(doc.content.uri)
+            if doc.mime_type == "application/pdf":
+                return parse_pdf(r.content)
+            else:
                 return r.text
 
     pattern = re.compile("^(https?://|file://|data:)")
@@ -114,6 +120,9 @@ async def content_from_doc(doc: MemoryBankDocument) -> str:
         else:
             async with httpx.AsyncClient() as client:
                 r = await client.get(doc.content)
+            if doc.mime_type == "application/pdf":
+                return parse_pdf(r.content)
+            else:
                 return r.text
 
     return interleaved_text_media_as_str(doc.content)
