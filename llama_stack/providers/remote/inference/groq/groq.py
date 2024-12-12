@@ -81,6 +81,7 @@ class GroqInferenceAdapter(Inference, ModelRegistryHelper):
         stream: Optional[bool] = False,
         logprobs: Optional[LogProbConfig] = None,
     ) -> Union[ChatCompletionResponse, AsyncGenerator]:
+
         model_id = self.get_provider_model_id(model_id)
         request = convert_chat_completion_request(
             request=ChatCompletionRequest(
@@ -95,8 +96,13 @@ class GroqInferenceAdapter(Inference, ModelRegistryHelper):
                 logprobs=logprobs,
             )
         )
-        response = await self._client.chat.completions.create(**request)
-        pass
+
+        response = self._client.chat.completions.create(**request)
+
+        if stream:
+            return None
+        else:
+            return None
 
 
     async def embeddings(
