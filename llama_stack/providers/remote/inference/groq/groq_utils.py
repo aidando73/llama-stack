@@ -39,14 +39,17 @@ def convert_chat_completion_request(
         # so we exclude it for now
         warnings.warn("repetition_penalty is not supported yet")
 
-    
 
     return CompletionCreateParams(
         model=request.model,
         messages=[_convert_message(message) for message in request.messages],
         sampling_params="testing",
         logprobs=None,
-        frequency_penalty=None
+        frequency_penalty=None,
+        stream=request.stream,
+        # Groq only supports n=1 at the time of writing
+        n=1,
+        max_tokens=request.sampling_params.max_tokens or None,
     )
 
 

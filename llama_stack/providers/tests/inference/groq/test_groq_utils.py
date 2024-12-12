@@ -68,7 +68,7 @@ class TestConvertChatCompletionRequest:
             converted = convert_chat_completion_request(request)
 
         assert "logprobs are not supported yet" in warnings[0].message.args[0]
-        assert "logprobs" not in converted or converted["logprobs"] is None
+        assert converted.get("logprobs") is None
 
     def test_does_not_include_response_format(self):
         request = self._dummy_chat_completion_request()
@@ -87,9 +87,7 @@ class TestConvertChatCompletionRequest:
             converted = convert_chat_completion_request(request)
 
         assert "response_format is not supported yet" in warnings[0].message.args[0]
-        assert (
-            "response_format" not in converted or converted["response_format"] is None
-        )
+        assert converted.get("response_format") is None
 
     def test_does_not_include_repetition_penalty(self):
         request = self._dummy_chat_completion_request()
@@ -99,16 +97,42 @@ class TestConvertChatCompletionRequest:
             converted = convert_chat_completion_request(request)
 
         assert "repetition_penalty is not supported yet" in warnings[0].message.args[0]
-        assert (
-            "repetition_penalty" not in converted
-            or converted["repetition_penalty"] is None
-        )
-        assert (
-            "frequency_penalty" not in converted
-            or converted["frequency_penalty"] is None
-        )
+        assert converted.get("repetition_penalty") is None
+        assert converted.get("frequency_penalty") is None
 
+
+    def test_includes_stream(self):
+        request = self._dummy_chat_completion_request()
+        request.stream = True
+
+        converted = convert_chat_completion_request(request)
+
+        assert converted["stream"] is True
     
+    def test_n_is_1(self):
+        request = self._dummy_chat_completion_request()
+
+        converted = convert_chat_completion_request(request)
+
+        assert converted["n"] == 1
+    
+    def test_if_max_tokens_is_0_then_it_is_not_included(self):
+        request = self._dummy_chat_completion_request()
+        # 0 is the default value for max_tokens
+        # So we assume that if it's 0, the user didn't set it
+        request.sampling_params.max_tokens = 0
+
+        converted = convert_chat_completion_request(request)
+
+        assert converted.get("max_tokens") is None
+    
+    def test_includes_max_tokens_if_set(self):
+        request = self._dummy_chat_completion_request()
+        request.sampling_params.max_tokens = 100
+
+        converted = convert_chat_completion_request(request)
+
+        assert converted["max_tokens"] == 100
 
     def _dummy_chat_completion_request(self):
         return ChatCompletionRequest(
