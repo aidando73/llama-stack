@@ -39,7 +39,6 @@ def convert_chat_completion_request(
         # so we exclude it for now
         warnings.warn("repetition_penalty is not supported yet")
 
-
     return CompletionCreateParams(
         model=request.model,
         messages=[_convert_message(message) for message in request.messages],
