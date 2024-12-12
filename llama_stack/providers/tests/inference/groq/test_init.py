@@ -23,7 +23,8 @@ class TestGroqInit:
         assert type(adapter) is GroqInferenceAdapter
         assert isinstance(adapter, Inference)
 
-    def test_config_api_key_defaults_to_env_var(self):
+class TestGroqConfig:
+    def test_api_key_defaults_to_env_var(self):
         os.environ["GROQ_API_KEY"] = "test"
         config = GroqConfig()
         assert config.api_key == "test"

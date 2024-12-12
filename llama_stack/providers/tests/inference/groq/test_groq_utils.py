@@ -3,14 +3,20 @@ from llama_stack.providers.remote.inference.groq.groq_utils import convert_chat_
 
 
 class TestConvertChatCompletionRequest:
-    def test_sets_main_parameters(self):
+    def test_sets_model(self):
         request = self._dummy_chat_completion_request()
         request.model = "Llama-3.2-3B"
-        request.messages = [UserMessage(content="Hello World")]
 
         converted = convert_chat_completion_request(request)
 
         assert converted["model"] == "Llama-3.2-3B"
+    
+    def test_converts_user_message(self):
+        request = self._dummy_chat_completion_request()
+        request.messages = [UserMessage(content="Hello World")]
+
+        converted = convert_chat_completion_request(request)
+
         assert converted["messages"] == [{"role": "user", "content": "Hello World"},]
 
     def test_converts_system_message(self):
@@ -19,10 +25,7 @@ class TestConvertChatCompletionRequest:
 
         converted = convert_chat_completion_request(request)
 
-        messages = converted["messages"]
-        assert len(messages) == 1
-        assert messages[0]["role"] == "system"
-        assert messages[0]["content"] == "You are a helpful assistant."
+        assert converted["messages"] == [{"role": "system", "content": "You are a helpful assistant."},]
     
     def test_converts_completion_message(self):
         request = self._dummy_chat_completion_request()
@@ -34,10 +37,12 @@ class TestConvertChatCompletionRequest:
 
         converted = convert_chat_completion_request(request)
 
-        messages = converted["messages"]
-        assert len(messages) == 2
-        assert messages[1]["role"] == "assistant"
-        assert messages[1]["content"] == "Hello World! How can I help you today?"
+        assert converted["messages"] == [
+            {"role": "user", "content": "Hello World"},
+            {"role": "assistant", "content": "Hello World! How can I help you today?"},
+        ]
+
+    
 
     def _dummy_chat_completion_request(self):
         return ChatCompletionRequest(
