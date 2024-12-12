@@ -20,6 +20,7 @@ def convert_chat_completion_request(
 ) -> CompletionCreateParams:
     """
     Convert a ChatCompletionRequest to a Groq API-compatible dictionary.
+    Warns client if request contains unsupported features.
     """
 
     if request.logprobs:
