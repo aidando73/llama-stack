@@ -38,8 +38,70 @@ from groq import Groq
 from groq.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
+from .groq_utils import convert_chat_completion_request
 import json
 
-class GroqInferenceAdapter(Inference):
+_MODEL_ALIASES = [
+    build_model_alias(
+        "llama3-8b-8192",
+        CoreModelId.llama3_1_8b_instruct.value,
+    ),
+]
+
+class GroqInferenceAdapter(Inference, ModelRegistryHelper):
+    _client: Groq
+
     def __init__(self, config: GroqConfig):
+        ModelRegistryHelper.__init__(self, model_aliases=_MODEL_ALIASES)
+        self._client = Groq(api_key=config.api_key)
+
+    def completion(
+        self,
+        model_id: str,
+        content: InterleavedTextMedia,
+        sampling_params: Optional[SamplingParams] = SamplingParams(),
+        response_format: Optional[ResponseFormat] = None,
+        stream: Optional[bool] = False,
+        logprobs: Optional[LogProbConfig] = None,
+    ) -> Union[CompletionResponse, AsyncIterator[CompletionResponseStreamChunk]]:
+        # Groq doesn't support non-chat completion as of time of writing
+        raise NotImplementedError()
+
+    async def chat_completion(
+        self,
+        model_id: str,
+        messages: List[Message],
+        sampling_params: Optional[SamplingParams] = SamplingParams(),
+        response_format: Optional[ResponseFormat] = None,
+        tools: Optional[List[ToolDefinition]] = None,
+        tool_choice: Optional[ToolChoice] = ToolChoice.auto,
+        tool_prompt_format: Optional[
+            ToolPromptFormat
+        ] = None,  # API default is ToolPromptFormat.json, we default to None to detect user input
+        stream: Optional[bool] = False,
+        logprobs: Optional[LogProbConfig] = None,
+    ) -> Union[ChatCompletionResponse, AsyncGenerator]:
+        model_id = self.get_provider_model_id(model_id)
+        request = convert_chat_completion_request(
+            request=ChatCompletionRequest(
+                model=model_id,
+                messages=messages,
+                sampling_params=sampling_params,
+                response_format=response_format,
+                tools=tools,
+                tool_choice=tool_choice,
+                tool_prompt_format=tool_prompt_format,
+                stream=stream,
+                logprobs=logprobs,
+            )
+        )
+        response = await self._client.chat.completions.create(**request)
         pass
+
+
+    async def embeddings(
+        self,
+        model_id: str,
+        contents: List[InterleavedTextMedia],
+    ) -> EmbeddingsResponse:
+        raise NotImplementedError()
