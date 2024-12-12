@@ -38,7 +38,7 @@ from groq import Groq
 from groq.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
-from .groq_utils import convert_chat_completion_request
+from .groq_utils import convert_chat_completion_request, convert_non_stream_chat_completion_response
 import json
 
 _MODEL_ALIASES = [
@@ -102,7 +102,7 @@ class GroqInferenceAdapter(Inference, ModelRegistryHelper):
         if stream:
             return None
         else:
-            return None
+            return convert_non_stream_chat_completion_response(response)
 
 
     async def embeddings(

@@ -94,9 +94,12 @@ def convert_non_stream_chat_completion_response(
 
 def _map_finish_reason_to_stop_reason(finish_reason: Literal["stop", "length", "tool_calls"]) -> StopReason:
     """
-    stop -> model hit a natural stop point or a provided stop sequence
-    length -> maximum number of tokens specified in the request was reached
-    tool_calls -> model called a tool
+    Convert a Groq chat completion finish_reason to a StopReason.
+
+    finish_reason: Literal["stop", "length", "tool_calls"]
+        - stop -> model hit a natural stop point or a provided stop sequence
+        - length -> maximum number of tokens specified in the request was reached
+        - tool_calls -> model called a tool
     """
     if finish_reason == "stop":
         return StopReason.end_of_turn
