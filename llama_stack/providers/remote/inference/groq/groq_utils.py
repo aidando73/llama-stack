@@ -1,5 +1,5 @@
 import warnings
-from typing import Literal
+from typing import Literal, AsyncGenerator
 
 from llama_stack.apis.inference import (
     ChatCompletionRequest,
@@ -8,6 +8,7 @@ from llama_stack.apis.inference import (
     ChatCompletionResponse,
     CompletionMessage,
     StopReason,
+    ChatCompletionResponseStreamChunk,
 )
 
 from groq.types.chat.completion_create_params import CompletionCreateParams
@@ -22,6 +23,8 @@ from groq.types.chat.chat_completion_assistant_message_param import (
     ChatCompletionAssistantMessageParam,
 )
 from groq.types.chat.chat_completion import ChatCompletion
+from groq.types.chat.chat_completion_chunk import ChatCompletionChunk
+from groq import AsyncStream
 
 
 def convert_chat_completion_request(
@@ -91,6 +94,11 @@ def convert_non_stream_chat_completion_response(
             stop_reason=_map_finish_reason_to_stop_reason(choice.finish_reason),
         ),
     )
+
+async def convert_stream_chat_completion_response(
+    stream: AsyncStream[ChatCompletionChunk],
+) -> AsyncGenerator[ChatCompletionResponseStreamChunk, None]:
+    raise NotImplementedError("stream_chat_completion_response is not supported yet")
 
 def _map_finish_reason_to_stop_reason(finish_reason: Literal["stop", "length", "tool_calls"]) -> StopReason:
     """
