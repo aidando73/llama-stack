@@ -42,7 +42,6 @@ def convert_chat_completion_request(
     return CompletionCreateParams(
         model=request.model,
         messages=[_convert_message(message) for message in request.messages],
-        sampling_params="testing",
         logprobs=None,
         frequency_penalty=None,
         stream=request.stream,
