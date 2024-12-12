@@ -37,7 +37,7 @@ def convert_chat_completion_request(
         # frequency_penalty defaults to 0 is a float between -2.0 and 2.0
         # repetition_penalty defaults to 1 and is often set somewhere between 1.0 and 2.0
         # so we exclude it for now
-        warnings.warn("repetition_penalty is not supported yet")
+        warnings.warn("repetition_penalty is not supported")
 
     return CompletionCreateParams(
         model=request.model,
