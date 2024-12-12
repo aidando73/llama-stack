@@ -7,8 +7,7 @@ from pydantic import BaseModel, Field
 
 @json_schema_type
 class GroqConfig(BaseModel):
-    # api_key: Optional[str] = Field(
-    #     default_factory=lambda: os.getenv("GROQ_API_KEY"),
-    #     description="The Groq API key",
-    # )
-    pass
+    api_key: Optional[str] = Field(
+        default_factory=lambda: os.getenv("GROQ_API_KEY"),
+        description="The Groq API key",
+    )
