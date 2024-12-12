@@ -1,3 +1,5 @@
+import warnings
+
 from llama_stack.apis.inference import ChatCompletionRequest, Message, Role
 
 from groq.types.chat.completion_create_params import CompletionCreateParams
@@ -20,10 +22,19 @@ def convert_chat_completion_request(
     Convert a ChatCompletionRequest to a Groq API-compatible dictionary.
     """
 
+    if request.logprobs:
+        # Groq doesn't support logprobs at the time of writing
+        warnings.warn("logprobs are not supported yet")
+    
+    if request.response_format:
+        # Groq's JSON mode is beta at the time of writing
+        warnings.warn("response_format is not supported yet")
+
     return CompletionCreateParams(
         model=request.model,
         messages=[_convert_message(message) for message in request.messages],
         sampling_params="testing",
+        logprobs=None,
     )
 
 

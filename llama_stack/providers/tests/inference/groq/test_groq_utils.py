@@ -1,3 +1,5 @@
+import pytest
+
 from llama_stack.apis.inference import ChatCompletionRequest, UserMessage, SystemMessage, CompletionMessage, StopReason
 from llama_stack.providers.remote.inference.groq.groq_utils import convert_chat_completion_request, _convert_message
 
@@ -42,7 +44,34 @@ class TestConvertChatCompletionRequest:
             {"role": "assistant", "content": "Hello World! How can I help you today?"},
         ]
 
+    def test_does_not_include_logprobs(self):
+        request = self._dummy_chat_completion_request()
+        request.logprobs = True
+
+        with pytest.warns(Warning) as warnings:
+            converted = convert_chat_completion_request(request)
+
+        assert "logprobs are not supported yet" in warnings[0].message.args[0]
+        assert "logprobs" not in converted or converted["logprobs"] is None
     
+    def test_does_not_include_response_format(self):
+        request = self._dummy_chat_completion_request()
+        request.response_format = {
+            "type": "json_object",
+            "json_schema": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "age": {"type": "number"},
+                },
+            },
+        }
+
+        with pytest.warns(Warning) as warnings:
+            converted = convert_chat_completion_request(request)
+
+        assert "response_format is not supported yet" in warnings[0].message.args[0]
+        assert "response_format" not in converted or converted["response_format"] is None
 
     def _dummy_chat_completion_request(self):
         return ChatCompletionRequest(
