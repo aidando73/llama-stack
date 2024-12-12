@@ -1,5 +1,10 @@
 import warnings
 from typing import AsyncIterator, List, Optional, Union, AsyncGenerator
+import json
+from .groq_utils import (
+    convert_chat_completion_request,
+    convert_non_stream_chat_completion_response,
+)
 from llama_models.llama3.api.datatypes import (
     InterleavedTextMedia,
     Message,
@@ -10,6 +15,8 @@ from llama_models.llama3.api.datatypes import (
     ToolParamDefinition,
 )
 from llama_models.datatypes import SamplingParams
+from llama_models.sku_list import CoreModelId
+from llama_models.llama3.api.datatypes import StopReason
 from llama_stack.apis.inference import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -32,14 +39,10 @@ from llama_stack.providers.utils.inference.model_registry import (
     ModelRegistryHelper,
 )
 from llama_stack.providers.remote.inference.groq.config import GroqConfig
-from llama_models.sku_list import CoreModelId
-from llama_models.llama3.api.datatypes import StopReason
 from groq import Groq
 from groq.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
-from .groq_utils import convert_chat_completion_request, convert_non_stream_chat_completion_response
-import json
 
 _MODEL_ALIASES = [
     build_model_alias(
@@ -103,7 +106,6 @@ class GroqInferenceAdapter(Inference, ModelRegistryHelper):
             return None
         else:
             return convert_non_stream_chat_completion_response(response)
-
 
     async def embeddings(
         self,
