@@ -139,3 +139,21 @@ class TestConvertChatCompletionRequest:
             model="Llama-3.2-3B",
             messages=[UserMessage(content="Hello World")],
         )
+
+    def test_includes_temperature(self):
+        request = self._dummy_chat_completion_request()
+        request.sampling_params.temperature = 0.5
+
+        converted = convert_chat_completion_request(request)
+
+        assert converted["temperature"] == 0.5
+
+    def test_includes_top_p(self):
+        request = self._dummy_chat_completion_request()
+        request.sampling_params.top_p = 0.95
+
+        converted = convert_chat_completion_request(request)
+
+        assert converted["top_p"] == 0.95
+
+    

@@ -50,6 +50,10 @@ def convert_chat_completion_request(
         # Groq only supports n=1 at the time of writing
         n=1,
         max_tokens=request.sampling_params.max_tokens or None,
+        # TODO - does the default temperature make sense?
+        temperature=request.sampling_params.temperature,
+        # TODO - does the default top_p make sense?
+        top_p=request.sampling_params.top_p,
     )
 
 
