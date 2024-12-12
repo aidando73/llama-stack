@@ -1,7 +1,17 @@
 import pytest
 
-from llama_stack.apis.inference import ChatCompletionRequest, UserMessage, SystemMessage, CompletionMessage, StopReason
-from llama_stack.providers.remote.inference.groq.groq_utils import convert_chat_completion_request, _convert_message
+from llama_stack.apis.inference import (
+    ChatCompletionRequest,
+    UserMessage,
+    SystemMessage,
+    CompletionMessage,
+    StopReason,
+    SamplingStrategy,
+)
+from llama_stack.providers.remote.inference.groq.groq_utils import (
+    convert_chat_completion_request,
+    _convert_message,
+)
 
 
 class TestConvertChatCompletionRequest:
@@ -12,14 +22,16 @@ class TestConvertChatCompletionRequest:
         converted = convert_chat_completion_request(request)
 
         assert converted["model"] == "Llama-3.2-3B"
-    
+
     def test_converts_user_message(self):
         request = self._dummy_chat_completion_request()
         request.messages = [UserMessage(content="Hello World")]
 
         converted = convert_chat_completion_request(request)
 
-        assert converted["messages"] == [{"role": "user", "content": "Hello World"},]
+        assert converted["messages"] == [
+            {"role": "user", "content": "Hello World"},
+        ]
 
     def test_converts_system_message(self):
         request = self._dummy_chat_completion_request()
@@ -27,15 +39,19 @@ class TestConvertChatCompletionRequest:
 
         converted = convert_chat_completion_request(request)
 
-        assert converted["messages"] == [{"role": "system", "content": "You are a helpful assistant."},]
-    
+        assert converted["messages"] == [
+            {"role": "system", "content": "You are a helpful assistant."},
+        ]
+
     def test_converts_completion_message(self):
         request = self._dummy_chat_completion_request()
         request.messages = [
             UserMessage(content="Hello World"),
-            CompletionMessage(content="Hello World! How can I help you today?", stop_reason=StopReason.end_of_message)
+            CompletionMessage(
+                content="Hello World! How can I help you today?",
+                stop_reason=StopReason.end_of_message,
+            ),
         ]
-        
 
         converted = convert_chat_completion_request(request)
 
@@ -53,7 +69,7 @@ class TestConvertChatCompletionRequest:
 
         assert "logprobs are not supported yet" in warnings[0].message.args[0]
         assert "logprobs" not in converted or converted["logprobs"] is None
-    
+
     def test_does_not_include_response_format(self):
         request = self._dummy_chat_completion_request()
         request.response_format = {
@@ -71,7 +87,28 @@ class TestConvertChatCompletionRequest:
             converted = convert_chat_completion_request(request)
 
         assert "response_format is not supported yet" in warnings[0].message.args[0]
-        assert "response_format" not in converted or converted["response_format"] is None
+        assert (
+            "response_format" not in converted or converted["response_format"] is None
+        )
+
+    def test_does_not_include_repetition_penalty(self):
+        request = self._dummy_chat_completion_request()
+        request.sampling_params.repetition_penalty = 1.5
+
+        with pytest.warns(Warning) as warnings:
+            converted = convert_chat_completion_request(request)
+
+        assert "repetition_penalty is not supported yet" in warnings[0].message.args[0]
+        assert (
+            "repetition_penalty" not in converted
+            or converted["repetition_penalty"] is None
+        )
+        assert (
+            "frequency_penalty" not in converted
+            or converted["frequency_penalty"] is None
+        )
+
+    
 
     def _dummy_chat_completion_request(self):
         return ChatCompletionRequest(

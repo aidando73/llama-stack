@@ -30,12 +30,23 @@ def convert_chat_completion_request(
     if request.response_format:
         # Groq's JSON mode is beta at the time of writing
         warnings.warn("response_format is not supported yet")
+    
+    if request.sampling_params.repetition_penalty:
+        # groq supports frequency_penalty, but frequency_penalty and sampling_params.repetition_penalty
+        # seem to have different semantics
+        # frequency_penalty defaults to 0 is a float between -2.0 and 2.0
+        # repetition_penalty defaults to 1 and is often set somewhere between 1.0 and 2.0
+        # so we exclude it for now
+        warnings.warn("repetition_penalty is not supported yet")
+
+    
 
     return CompletionCreateParams(
         model=request.model,
         messages=[_convert_message(message) for message in request.messages],
         sampling_params="testing",
         logprobs=None,
+        frequency_penalty=None
     )
 
 
