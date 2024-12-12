@@ -199,3 +199,10 @@ class TestConvertNonStreamChatCompletionResponse:
             created=1729382400,
             object="chat.completion",
         )
+
+class TestConvertStreamChatCompletionResponse:
+    @pytest.mark.asyncio
+    async def test_returns_response(self):
+        response = self._dummy_chat_completion_response_stream()
+    
+    # async def _dummy_chat_completion_response_stream(self):

@@ -98,7 +98,8 @@ def convert_non_stream_chat_completion_response(
 async def convert_stream_chat_completion_response(
     stream: AsyncStream[ChatCompletionChunk],
 ) -> AsyncGenerator[ChatCompletionResponseStreamChunk, None]:
-    raise NotImplementedError("stream_chat_completion_response is not supported yet")
+    
+    pass
 
 def _map_finish_reason_to_stop_reason(finish_reason: Literal["stop", "length", "tool_calls"]) -> StopReason:
     """
