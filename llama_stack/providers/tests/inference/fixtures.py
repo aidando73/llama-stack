@@ -22,6 +22,7 @@ from llama_stack.providers.remote.inference.fireworks import FireworksImplConfig
 from llama_stack.providers.remote.inference.nvidia import NVIDIAConfig
 from llama_stack.providers.remote.inference.ollama import OllamaImplConfig
 from llama_stack.providers.remote.inference.tgi import TGIImplConfig
+from llama_stack.providers.remote.inference.groq import GroqConfig
 from llama_stack.providers.remote.inference.together import TogetherImplConfig
 from llama_stack.providers.remote.inference.vllm import VLLMInferenceAdapterConfig
 from llama_stack.providers.tests.resolver import construct_stack_for_test
@@ -146,6 +147,20 @@ def inference_together() -> ProviderFixture:
         ),
     )
 
+@pytest.fixture(scope="session")
+def inference_groq() -> ProviderFixture:
+    return ProviderFixture(
+        providers=[
+            Provider(
+                provider_id="groq",
+                provider_type="remote::groq",
+                config=GroqConfig().model_dump(),
+            )
+        ],
+        provider_data=dict(
+            groq_api_key=get_env_or_fail("GROQ_API_KEY"),
+        ),
+    )
 
 @pytest.fixture(scope="session")
 def inference_bedrock() -> ProviderFixture:
@@ -219,6 +234,7 @@ INFERENCE_FIXTURES = [
     "ollama",
     "fireworks",
     "together",
+    "groq",
     "vllm_remote",
     "remote",
     "bedrock",
