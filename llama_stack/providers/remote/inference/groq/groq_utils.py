@@ -1,4 +1,5 @@
 import warnings
+from typing import Literal
 
 from llama_stack.apis.inference import (
     ChatCompletionRequest,
@@ -91,8 +92,17 @@ def convert_non_stream_chat_completion_response(
         ),
     )
 
-def _map_finish_reason_to_stop_reason(finish_reason: str) -> StopReason:
+def _map_finish_reason_to_stop_reason(finish_reason: Literal["stop", "length", "tool_calls"]) -> StopReason:
+    """
+    stop -> model hit a natural stop point or a provided stop sequence
+    length -> maximum number of tokens specified in the request was reached
+    tool_calls -> model called a tool
+    """
     if finish_reason == "stop":
         return StopReason.end_of_turn
-    else:
+    elif finish_reason == "length":
         return StopReason.end_of_message
+    elif finish_reason == "tool_calls":
+        raise NotImplementedError("tool_calls is not supported yet")
+    else:
+        raise ValueError(f"Invalid finish reason: {finish_reason}")
