@@ -10,8 +10,10 @@ from llama_stack.apis.inference import (
 )
 from llama_stack.providers.remote.inference.groq.groq_utils import (
     convert_chat_completion_request,
-    _convert_message,
+    convert_non_stream_chat_completion_response,
 )
+from groq.types.chat.chat_completion import ChatCompletion, Choice
+from groq.types.chat.chat_completion_message import ChatCompletionMessage
 
 
 class TestConvertChatCompletionRequest:
@@ -96,7 +98,7 @@ class TestConvertChatCompletionRequest:
         with pytest.warns(Warning) as warnings:
             converted = convert_chat_completion_request(request)
 
-        assert "repetition_penalty is not supported yet" in warnings[0].message.args[0]
+        assert "repetition_penalty is not supported" in warnings[0].message.args[0]
         assert converted.get("repetition_penalty") is None
         assert converted.get("frequency_penalty") is None
 
@@ -156,4 +158,35 @@ class TestConvertChatCompletionRequest:
 
         assert converted["top_p"] == 0.95
 
+class TestConvertNonStreamChatCompletionResponse:
+    def test_returns_response(self):
+        response = self._dummy_chat_completion_response()
+        response.choices[0].message.content = "Hello World"
+
+        converted = convert_non_stream_chat_completion_response(response)
+
+        assert converted.completion_message.content == "Hello World"
     
+    def test_returns_response_with_finish_reason(self):
+        response = self._dummy_chat_completion_response()
+
+        converted = convert_non_stream_chat_completion_response(response)
+
+        assert converted.completion_message.stop_reason == StopReason.end_of_message
+
+    def _dummy_chat_completion_response(self):
+        return ChatCompletion(
+            id="chatcmpl-123",
+            model="Llama-3.2-3B",
+            choices=[
+                Choice(
+                    index=0,
+                    message=ChatCompletionMessage(
+                        role="assistant", content="Hello World"
+                    ),
+                    finish_reason="stop",
+                )
+            ],
+            created=1729382400,
+            object="chat.completion",
+        )

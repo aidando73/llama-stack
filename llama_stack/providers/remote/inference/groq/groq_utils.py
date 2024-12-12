@@ -1,6 +1,13 @@
 import warnings
 
-from llama_stack.apis.inference import ChatCompletionRequest, Message, Role
+from llama_stack.apis.inference import (
+    ChatCompletionRequest,
+    Message,
+    Role,
+    ChatCompletionResponse,
+    CompletionMessage,
+    StopReason,
+)
 
 from groq.types.chat.completion_create_params import CompletionCreateParams
 from groq.types.chat.chat_completion_message_param import ChatCompletionMessageParam
@@ -13,6 +20,7 @@ from groq.types.chat.chat_completion_user_message_param import (
 from groq.types.chat.chat_completion_assistant_message_param import (
     ChatCompletionAssistantMessageParam,
 )
+from groq.types.chat.chat_completion import ChatCompletion
 
 
 def convert_chat_completion_request(
@@ -26,11 +34,11 @@ def convert_chat_completion_request(
     if request.logprobs:
         # Groq doesn't support logprobs at the time of writing
         warnings.warn("logprobs are not supported yet")
-    
+
     if request.response_format:
         # Groq's JSON mode is beta at the time of writing
         warnings.warn("response_format is not supported yet")
-    
+
     if request.sampling_params.repetition_penalty:
         # groq supports frequency_penalty, but frequency_penalty and sampling_params.repetition_penalty
         # seem to have different semantics
@@ -66,3 +74,16 @@ def _convert_message(message: Message) -> ChatCompletionMessageParam:
         )
     else:
         raise ValueError(f"Invalid message role: {message.role}")
+
+
+def convert_non_stream_chat_completion_response(
+    response: ChatCompletion,
+) -> ChatCompletionResponse:
+    # groq only supports n=1 at time of writing, so there is only one choice
+    message = response.choices[0].message
+    return ChatCompletionResponse(
+        completion_message=CompletionMessage(
+            content=message.content,
+            stop_reason=StopReason.end_of_message,
+        ),
+    )
