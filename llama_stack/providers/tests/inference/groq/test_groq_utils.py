@@ -167,8 +167,17 @@ class TestConvertNonStreamChatCompletionResponse:
 
         assert converted.completion_message.content == "Hello World"
     
-    def test_returns_response_with_finish_reason(self):
+    def test_maps_stop_to_end_of_message(self):
         response = self._dummy_chat_completion_response()
+        response.choices[0].finish_reason = "stop"
+
+        converted = convert_non_stream_chat_completion_response(response)
+
+        assert converted.completion_message.stop_reason == StopReason.end_of_turn
+    
+    def test_maps_length_to_end_of_message(self):
+        response = self._dummy_chat_completion_response()
+        response.choices[0].finish_reason = "length"
 
         converted = convert_non_stream_chat_completion_response(response)
 

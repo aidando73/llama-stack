@@ -46,6 +46,9 @@ def convert_chat_completion_request(
         # repetition_penalty defaults to 1 and is often set somewhere between 1.0 and 2.0
         # so we exclude it for now
         warnings.warn("repetition_penalty is not supported")
+    
+    if request.tools:
+        warnings.warn("tools are not supported yet")
 
     return CompletionCreateParams(
         model=request.model,
@@ -80,10 +83,16 @@ def convert_non_stream_chat_completion_response(
     response: ChatCompletion,
 ) -> ChatCompletionResponse:
     # groq only supports n=1 at time of writing, so there is only one choice
-    message = response.choices[0].message
+    choice = response.choices[0]
     return ChatCompletionResponse(
         completion_message=CompletionMessage(
-            content=message.content,
-            stop_reason=StopReason.end_of_message,
+            content=choice.message.content,
+            stop_reason=_map_finish_reason_to_stop_reason(choice.finish_reason),
         ),
     )
+
+def _map_finish_reason_to_stop_reason(finish_reason: str) -> StopReason:
+    if finish_reason == "stop":
+        return StopReason.end_of_turn
+    else:
+        return StopReason.end_of_message
