@@ -132,11 +132,11 @@ class CommonRoutingTableImpl(RoutingTable):
                 raise ValueError("Unknown routing table type")
 
         apiname, objtype = apiname_object()
-
         # Get objects from disk registry
         obj = self.dist_registry.get_cached(objtype, routing_key)
         if not obj:
             provider_ids = list(self.impls_by_provider_id.keys())
+            print(self.impls_by_provider_id)
             if len(provider_ids) > 1:
                 provider_ids_str = f"any of the providers: {', '.join(provider_ids)}"
             else:
