@@ -48,10 +48,10 @@ model_aliases = [
         "llama3.1:8b-instruct-fp16",
         CoreModelId.llama3_1_8b_instruct.value,
     ),
-    build_model_alias_with_just_provider_model_id(
-        "llama3.1:8b",
-        CoreModelId.llama3_1_8b_instruct.value,
-    ),
+    # build_model_alias_with_just_provider_model_id(
+    #     "llama3.1:8b",
+    #     CoreModelId.llama3_1_8b_instruct.value,
+    # ),
     build_model_alias(
         "llama3.1:70b-instruct-fp16",
         CoreModelId.llama3_1_70b_instruct.value,
@@ -80,10 +80,10 @@ model_aliases = [
         "llama3.2:3b-instruct-fp16",
         CoreModelId.llama3_2_3b_instruct.value,
     ),
-    build_model_alias_with_just_provider_model_id(
-        "llama3.2:3b",
-        CoreModelId.llama3_2_3b_instruct.value,
-    ),
+    # build_model_alias_with_just_provider_model_id(
+    #     "llama3.2:3b",
+    #     CoreModelId.llama3_2_3b_instruct.value,
+    # ),
     build_model_alias(
         "llama3.2-vision:11b-instruct-fp16",
         CoreModelId.llama3_2_11b_vision_instruct.value,
@@ -215,6 +215,7 @@ class OllamaInferenceAdapter(Inference, ModelsProtocolPrivate):
             stream=stream,
             logprobs=logprobs,
         )
+        print("request", request)
         if stream:
             return self._stream_chat_completion(request)
         else:
@@ -312,8 +313,9 @@ class OllamaInferenceAdapter(Inference, ModelsProtocolPrivate):
                 )
 
         stream = _generate_and_convert_to_openai_compat()
+        enabled_tools = [tool.tool_name for tool in request.tools]
         async for chunk in process_chat_completion_stream_response(
-            stream, self.formatter
+            stream, self.formatter, enabled_tools
         ):
             yield chunk
 
@@ -348,6 +350,7 @@ class OllamaInferenceAdapter(Inference, ModelsProtocolPrivate):
             return model
         model = await self.register_helper.register_model(model)
         models = await self.client.ps()
+        # print("Ollama models", models)
         available_models = [m["model"] for m in models["models"]]
         if model.provider_resource_id not in available_models:
             raise ValueError(

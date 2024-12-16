@@ -343,6 +343,7 @@ class ChatAgent(ShieldRunnerMixin):
         stream: bool = False,
     ) -> AsyncGenerator:
         enabled_tools = set(t.type for t in self.agent_config.tools)
+        print(self.agent_config)
         need_rag_context = await self._should_retrieve_context(
             input_messages, attachments
         )
@@ -428,6 +429,7 @@ class ChatAgent(ShieldRunnerMixin):
                     stream=True,
                     sampling_params=sampling_params,
                 ):
+                    # print("chunk", chunk)
                     event = chunk.event
                     if event.event_type == ChatCompletionResponseEventType.start:
                         continue
@@ -780,6 +782,7 @@ class ChatAgent(ShieldRunnerMixin):
                         parameters=t.parameters,
                     )
                 )
+        # print("_get_tools", ret)
         return ret
 
 

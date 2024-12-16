@@ -23,6 +23,7 @@ def is_supported_safety_model(model: Model) -> bool:
 
 
 def supported_inference_models() -> List[Model]:
+    print(list(ModelFamily))
     return [
         m
         for m in all_registered_models()
