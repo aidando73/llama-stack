@@ -93,7 +93,7 @@ models:
 - metadata: {}
   model_id: meta-llama/Llama-3.2-1B-Instruct
   provider_id: fireworks
-  provider_model_id: fireworks/llama-v3p2-1b-instruct
+  provider_model_id: accounts/aidando73-e35261/deployments/0b2e39fd
   model_type: llm
 - metadata: {}
   model_id: meta-llama/Llama-3.2-3B-Instruct

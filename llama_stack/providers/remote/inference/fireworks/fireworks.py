@@ -50,7 +50,7 @@ MODEL_ALIASES = [
         CoreModelId.llama3_1_405b_instruct.value,
     ),
     build_model_alias(
-        "fireworks/llama-v3p2-1b-instruct",
+        "accounts/aidando73-e35261/deployments/0b2e39fd",
         CoreModelId.llama3_2_1b_instruct.value,
     ),
     build_model_alias(
