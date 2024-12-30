@@ -46,7 +46,7 @@ MODEL_ALIASES = [
         CoreModelId.llama3_1_70b_instruct.value,
     ),
     build_model_alias(
-        "fireworks/llama-v3p1-405b-instruct",
+        "accounts/fireworks/models/llama-v3p1-405b-instruct",
         CoreModelId.llama3_1_405b_instruct.value,
     ),
     build_model_alias(
@@ -187,8 +187,10 @@ class FireworksInferenceAdapter(
         logprobs: Optional[LogProbConfig] = None,
     ) -> AsyncGenerator:
         model = await self.model_store.get_model(model_id)
+        print(model)
         request = ChatCompletionRequest(
             model=model.provider_resource_id,
+            # model="accounts/fireworks/models/llama-v3p1-405b-instruct",
             messages=messages,
             sampling_params=sampling_params,
             tools=tools or [],
