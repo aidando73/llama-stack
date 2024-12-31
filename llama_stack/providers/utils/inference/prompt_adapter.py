@@ -240,7 +240,6 @@ async def chat_completion_request_to_prompt(
     messages = chat_completion_request_to_messages(request, llama_model)
     request.messages = messages
     request = await convert_request_to_raw(request)
-    # print(request.messages)
     with open("messages.json", "w") as f:
         f.write(request.model_dump_json())
     model_input = formatter.encode_dialog_prompt(request.messages)

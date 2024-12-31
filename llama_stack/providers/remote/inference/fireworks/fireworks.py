@@ -154,6 +154,7 @@ class FireworksInferenceAdapter(
     ) -> CompletionResponse:
         params = await self._get_params(request)
         r = await self._get_client().completion.acreate(**params)
+        print(r)
         return process_completion_response(r, self.formatter)
 
     async def _stream_completion(self, request: CompletionRequest) -> AsyncGenerator:
