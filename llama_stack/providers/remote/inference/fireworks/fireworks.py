@@ -204,10 +204,12 @@ class FireworksInferenceAdapter(
         logprobs: Optional[LogProbConfig] = None,
     ) -> AsyncGenerator:
         model = await self.model_store.get_model(model_id)
-        print(model)
+        if model.identifier == "meta-llama/Llama-3.1-405B-Instruct-FP8":
+            model_id = "accounts/fireworks/models/llama-v3p1-405b-instruct"
+        else:
+            model_id = model.provider_resource_id
         request = ChatCompletionRequest(
-            model=model.provider_resource_id,
-            # model="accounts/fireworks/models/llama-v3p1-405b-instruct",
+            model=model_id,
             messages=messages,
             sampling_params=sampling_params,
             tools=tools or [],
