@@ -2,6 +2,7 @@
 # Environment setup
 source ~/miniconda3/bin/activate && conda activate ./env
 
+screen -S llama-stack
 
 # Ollama build from source
 export LLAMA_STACK_PORT=5000
