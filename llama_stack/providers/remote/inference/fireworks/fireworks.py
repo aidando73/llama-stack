@@ -63,11 +63,11 @@ MODEL_ALIASES = [
         CoreModelId.llama3_1_70b_instruct.value,
     ),
     build_model_alias(
-        "fireworks/llama-v3p1-405b-instruct",
+        "accounts/fireworks/models/llama-v3p1-405b-instruct",
         CoreModelId.llama3_1_405b_instruct.value,
     ),
     build_model_alias(
-        "fireworks/llama-v3p2-1b-instruct",
+        "accounts/aidando73-e35261/deployments/0b2e39fd",
         CoreModelId.llama3_2_1b_instruct.value,
     ),
     build_model_alias(
@@ -154,6 +154,7 @@ class FireworksInferenceAdapter(
     ) -> CompletionResponse:
         params = await self._get_params(request)
         r = await self._get_client().completion.acreate(**params)
+        print(r)
         return process_completion_response(r, self.formatter)
 
     async def _stream_completion(self, request: CompletionRequest) -> AsyncGenerator:
@@ -204,8 +205,12 @@ class FireworksInferenceAdapter(
         logprobs: Optional[LogProbConfig] = None,
     ) -> AsyncGenerator:
         model = await self.model_store.get_model(model_id)
+        if model.identifier == "meta-llama/Llama-3.1-405B-Instruct-FP8":
+            model_id = "accounts/fireworks/models/llama-v3p1-405b-instruct"
+        else:
+            model_id = model.provider_resource_id
         request = ChatCompletionRequest(
-            model=model.provider_resource_id,
+            model=model_id,
             messages=messages,
             sampling_params=sampling_params,
             tools=tools or [],
