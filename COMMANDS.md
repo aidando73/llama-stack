@@ -30,7 +30,6 @@ screen -S llama-stack
 # Fireworks build from source
 pip install -e . \
 && llama stack build --config distributions/fireworks/build.yaml --image-type conda \
-&& llama stack run distributions/fireworks/run.yaml \
-  --port 5000 \
-  | stdbuf -o0 tee -a llama-pipe
+&& stdbuf --output=L llama stack run distributions/fireworks/run.yaml \
+  --port 5000 | tee -a llama-stack.log
 ```
