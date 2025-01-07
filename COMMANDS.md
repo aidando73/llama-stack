@@ -21,6 +21,12 @@ pip install -e . \
     --port $LLAMA_STACK_PORT \
     --env OLLAMA_URL=http://localhost:11434
 
+# Together build from source
+pip install -e . \
+    && llama stack build --template together --image-type conda \
+    && llama stack run ./distributions/together/run.yaml \
+    --port 5000 \
+    --env TOGETHER_API_KEY=$TOGETHER_API_KEY | tee -a llama-stack.log
 
 # Setup
 source ~/miniconda3/bin/activate && conda activate ./env
