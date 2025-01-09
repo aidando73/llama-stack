@@ -31,7 +31,6 @@ pip install -e . \
 # Setup
 screen -S llama-stack
 source ~/miniconda3/bin/activate && conda activate ./env
-mkfifo llama-pipe
 
 # Fireworks build from source
 pip install -e . \
