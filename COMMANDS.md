@@ -29,9 +29,9 @@ pip install -e . \
     --env TOGETHER_API_KEY=$TOGETHER_API_KEY | tee -a llama-stack.log
 
 # Setup
+screen -S llama-stack
 source ~/miniconda3/bin/activate && conda activate ./env
 mkfifo llama-pipe
-screen -S llama-stack
 
 # Fireworks build from source
 pip install -e . \
