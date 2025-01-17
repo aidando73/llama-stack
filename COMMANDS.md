@@ -37,6 +37,8 @@ conda create --name llamastack-vllm python=3.10
 conda activate llamastack-vllm
 
 pip install attrs>=21.3.0
+pip install -e git+https://github.com/meta-llama/llama-models.git#egg=llama-models
+
 
 export INFERENCE_MODEL=unsloth/Llama-3.3-70B-Instruct-bnb-4bit && \
 pip install -e . && \

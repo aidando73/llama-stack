@@ -92,6 +92,7 @@ class VLLMInferenceAdapter(Inference, ModelsProtocolPrivate):
         stream: Optional[bool] = False,
         logprobs: Optional[LogProbConfig] = None,
     ) -> Union[CompletionResponse, CompletionResponseStreamChunk]:
+        print(f"completion: {model_id} {content} {sampling_params} {response_format} {stream} {logprobs}")
         raise NotImplementedError("Completion not implemented for vLLM")
 
     async def chat_completion(
