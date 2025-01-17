@@ -36,13 +36,15 @@ source ~/miniconda3/bin/activate && conda activate ./env
 conda create --name llamastack-vllm python=3.10
 conda activate llamastack-vllm
 
+pip install attrs>=21.3.0
+
 export INFERENCE_MODEL=unsloth/Llama-3.3-70B-Instruct-bnb-4bit && \
 pip install -e . && \
 llama stack build --template remote-vllm --image-type conda && \
 llama stack run ./distributions/remote-vllm/run.yaml \
   --port 5000 \
   --env INFERENCE_MODEL=$INFERENCE_MODEL \
-  --env VLLM_URL=http://localhost:8000
+  --env VLLM_URL=http://localhost:8000/v1
 
 # Fireworks build from source
 pip install -e . \
