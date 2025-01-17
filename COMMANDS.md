@@ -37,8 +37,7 @@ conda create --name llamastack-vllm python=3.10
 conda activate llamastack-vllm
 
 export INFERENCE_MODEL=unsloth/Llama-3.3-70B-Instruct-bnb-4bit && \
-pip install -e .[all] && \
-cd distributions/remote-vllm && \
+pip install -e . && \
 llama stack build --template remote-vllm --image-type conda && \
 llama stack run ./distributions/remote-vllm/run.yaml \
   --port 5000 \

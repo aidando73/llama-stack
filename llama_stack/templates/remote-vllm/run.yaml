@@ -5,6 +5,7 @@ apis:
 - inference
 - memory
 - safety
+- datasetio
 - telemetry
 - tool_runtime
 providers:
@@ -62,6 +63,7 @@ providers:
   - provider_id: memory-runtime
     provider_type: inline::memory-runtime
     config: {}
+  datasetio: []
 metadata_store:
   type: sqlite
   db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/remote-vllm}/registry.db
