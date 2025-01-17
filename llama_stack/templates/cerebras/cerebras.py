@@ -9,11 +9,11 @@ from pathlib import Path
 from llama_models.sku_list import all_registered_models
 
 from llama_stack.apis.models.models import ModelType
-
-from llama_stack.distribution.datatypes import ModelInput, Provider, ShieldInput
+from llama_stack.distribution.datatypes import ModelInput, Provider, ToolGroupInput
 from llama_stack.providers.inline.inference.sentence_transformers import (
     SentenceTransformersInferenceConfig,
 )
+from llama_stack.providers.inline.memory.faiss.config import FaissImplConfig
 from llama_stack.providers.remote.inference.cerebras import CerebrasImplConfig
 from llama_stack.providers.remote.inference.cerebras.cerebras import model_aliases
 from llama_stack.templates.template import DistributionTemplate, RunConfigSettings
@@ -23,11 +23,21 @@ def get_distribution_template() -> DistributionTemplate:
     providers = {
         "inference": ["remote::cerebras"],
         "safety": ["inline::llama-guard"],
-        "memory": ["inline::meta-reference"],
+        "memory": ["inline::faiss", "remote::chromadb", "remote::pgvector"],
         "agents": ["inline::meta-reference"],
+        "eval": ["inline::meta-reference"],
+        "datasetio": ["remote::huggingface", "inline::localfs"],
+        "scoring": ["inline::basic", "inline::llm-as-judge", "inline::braintrust"],
         "telemetry": ["inline::meta-reference"],
+        "tool_runtime": [
+            "remote::brave-search",
+            "remote::tavily-search",
+            "inline::code-interpreter",
+            "inline::memory-runtime",
+        ],
     }
 
+    name = "cerebras"
     inference_provider = Provider(
         provider_id="cerebras",
         provider_type="remote::cerebras",
@@ -58,6 +68,25 @@ def get_distribution_template() -> DistributionTemplate:
             "embedding_dimension": 384,
         },
     )
+    memory_provider = Provider(
+        provider_id="faiss",
+        provider_type="inline::faiss",
+        config=FaissImplConfig.sample_run_config(f"distributions/{name}"),
+    )
+    default_tool_groups = [
+        ToolGroupInput(
+            toolgroup_id="builtin::websearch",
+            provider_id="tavily-search",
+        ),
+        ToolGroupInput(
+            toolgroup_id="builtin::memory",
+            provider_id="memory-runtime",
+        ),
+        ToolGroupInput(
+            toolgroup_id="builtin::code_interpreter",
+            provider_id="code-interpreter",
+        ),
+    ]
 
     return DistributionTemplate(
         name="cerebras",
@@ -71,13 +100,15 @@ def get_distribution_template() -> DistributionTemplate:
             "run.yaml": RunConfigSettings(
                 provider_overrides={
                     "inference": [inference_provider, embedding_provider],
+                    "memory": [memory_provider],
                 },
                 default_models=default_models + [embedding_model],
-                default_shields=[ShieldInput(shield_id="meta-llama/Llama-Guard-3-8B")],
+                default_shields=[],
+                default_tool_groups=default_tool_groups,
             ),
         },
         run_config_env_vars={
-            "LLAMASTACK_PORT": (
+            "LLAMA_STACK_PORT": (
                 "5001",
                 "Port for the Llama Stack distribution server",
             ),

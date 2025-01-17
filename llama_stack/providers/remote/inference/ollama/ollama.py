@@ -9,7 +9,6 @@ from typing import AsyncGenerator, List, Optional, Union
 
 import httpx
 from llama_models.datatypes import CoreModelId
-
 from llama_models.llama3.api.chat_format import ChatFormat
 from llama_models.llama3.api.tokenizer import Tokenizer
 from ollama import AsyncClient
@@ -35,7 +34,6 @@ from llama_stack.apis.inference import (
 )
 from llama_stack.apis.models import Model, ModelType
 from llama_stack.providers.datatypes import ModelsProtocolPrivate
-
 from llama_stack.providers.utils.inference.model_registry import (
     build_model_alias,
     build_model_alias_with_just_provider_model_id,
@@ -222,7 +220,7 @@ class OllamaInferenceAdapter(Inference, ModelsProtocolPrivate):
         response_format: Optional[ResponseFormat] = None,
         tools: Optional[List[ToolDefinition]] = None,
         tool_choice: Optional[ToolChoice] = ToolChoice.auto,
-        tool_prompt_format: Optional[ToolPromptFormat] = ToolPromptFormat.json,
+        tool_prompt_format: Optional[ToolPromptFormat] = None,
         stream: Optional[bool] = False,
         logprobs: Optional[LogProbConfig] = None,
     ) -> AsyncGenerator:
@@ -236,6 +234,7 @@ class OllamaInferenceAdapter(Inference, ModelsProtocolPrivate):
             tool_prompt_format=tool_prompt_format,
             stream=stream,
             logprobs=logprobs,
+            response_format=response_format,
         )
         if stream:
             return self._stream_chat_completion(request)
@@ -278,6 +277,14 @@ class OllamaInferenceAdapter(Inference, ModelsProtocolPrivate):
                 request, self.formatter
             )
             input_dict["raw"] = True
+
+        if fmt := request.response_format:
+            if fmt.type == "json_schema":
+                input_dict["format"] = fmt.json_schema
+            elif fmt.type == "grammar":
+                raise NotImplementedError("Grammar response format is not supported")
+            else:
+                raise ValueError(f"Unknown response format type: {fmt.type}")
 
         return {
             "model": request.model,

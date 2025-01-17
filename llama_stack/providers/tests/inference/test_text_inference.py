@@ -18,6 +18,7 @@ from llama_models.llama3.api.datatypes import (
 
 from pydantic import BaseModel, ValidationError
 
+from llama_stack.apis.common.content_types import ToolCallParseStatus
 from llama_stack.apis.inference import (
     ChatCompletionResponse,
     ChatCompletionResponseEventType,
@@ -27,12 +28,11 @@ from llama_stack.apis.inference import (
     JsonSchemaResponseFormat,
     LogProbConfig,
     SystemMessage,
-    ToolCallDelta,
-    ToolCallParseStatus,
     ToolChoice,
     UserMessage,
 )
-from llama_stack.apis.models import Model
+from llama_stack.apis.models import ListModelsResponse, Model
+
 from .utils import group_chunks
 
 
@@ -86,23 +86,26 @@ def sample_tool_definition():
 
 
 class TestInference:
-    @pytest.mark.asyncio
+    # Session scope for asyncio because the tests in this class all
+    # share the same provider instance.
+    @pytest.mark.asyncio(loop_scope="session")
     async def test_model_list(self, inference_model, inference_stack):
         _, models_impl = inference_stack
         response = await models_impl.list_models()
-        assert isinstance(response, list)
-        assert len(response) >= 1
-        assert all(isinstance(model, Model) for model in response)
+        assert isinstance(response, ListModelsResponse)
+        assert isinstance(response.data, list)
+        assert len(response.data) >= 1
+        assert all(isinstance(model, Model) for model in response.data)
 
         model_def = None
-        for model in response:
+        for model in response.data:
             if model.identifier == inference_model:
                 model_def = model
                 break
 
         assert model_def is not None
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="session")
     async def test_completion(self, inference_model, inference_stack):
         inference_impl, _ = inference_stack
 
@@ -147,7 +150,7 @@ class TestInference:
         last = chunks[-1]
         assert last.stop_reason == StopReason.out_of_tokens
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="session")
     async def test_completion_logprobs(self, inference_model, inference_stack):
         inference_impl, _ = inference_stack
 
@@ -194,7 +197,9 @@ class TestInference:
             1 <= len(chunks) <= 6
         )  # why 6 and not 5? the response may have an extra closing chunk, e.g. for usage or stop_reason
         for chunk in chunks:
-            if chunk.delta:  # if there's a token, we expect logprobs
+            if (
+                chunk.delta.type == "text" and chunk.delta.text
+            ):  # if there's a token, we expect logprobs
                 assert chunk.logprobs, "Logprobs should not be empty"
                 assert all(
                     len(logprob.logprobs_by_token) == 3 for logprob in chunk.logprobs
@@ -202,7 +207,7 @@ class TestInference:
             else:  # no token, no logprobs
                 assert not chunk.logprobs, "Logprobs should be empty"
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.skip("This test is not quite robust")
     async def test_completion_structured_output(self, inference_model, inference_stack):
         inference_impl, _ = inference_stack
@@ -210,6 +215,7 @@ class TestInference:
         provider = inference_impl.routing_table.get_provider_impl(inference_model)
         if provider.__provider_spec__.provider_type not in (
             "inline::meta-reference",
+            "remote::ollama",
             "remote::tgi",
             "remote::together",
             "remote::fireworks",
@@ -246,7 +252,7 @@ class TestInference:
         assert answer.year_born == "1963"
         assert answer.year_retired == "2003"
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="session")
     async def test_chat_completion_non_streaming(
         self, inference_model, inference_stack, common_params, sample_messages
     ):
@@ -263,7 +269,7 @@ class TestInference:
         assert isinstance(response.completion_message.content, str)
         assert len(response.completion_message.content) > 0
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="session")
     async def test_structured_output(
         self, inference_model, inference_stack, common_params
     ):
@@ -272,6 +278,7 @@ class TestInference:
         provider = inference_impl.routing_table.get_provider_impl(inference_model)
         if provider.__provider_spec__.provider_type not in (
             "inline::meta-reference",
+            "remote::ollama",
             "remote::fireworks",
             "remote::tgi",
             "remote::together",
@@ -333,7 +340,7 @@ class TestInference:
         with pytest.raises(ValidationError):
             AnswerFormat.model_validate_json(response.completion_message.content)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="session")
     async def test_chat_completion_streaming(
         self, inference_model, inference_stack, common_params, sample_messages
     ):
@@ -360,7 +367,7 @@ class TestInference:
         end = grouped[ChatCompletionResponseEventType.complete][0]
         assert end.event.stop_reason == StopReason.end_of_turn
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="session")
     async def test_chat_completion_with_tool_calling(
         self,
         inference_model,
@@ -370,6 +377,14 @@ class TestInference:
         sample_tool_definition,
     ):
         inference_impl, _ = inference_stack
+        provider = inference_impl.routing_table.get_provider_impl(inference_model)
+        if (
+            provider.__provider_spec__.provider_type == "remote::groq"
+            and "Llama-3.2" in inference_model
+        ):
+            # TODO(aidand): Remove this skip once Groq's tool calling for Llama3.2 works better
+            pytest.skip("Groq's tool calling for Llama3.2 doesn't work very well")
+
         messages = sample_messages + [
             UserMessage(
                 content="What's the weather like in San Francisco?",
@@ -399,7 +414,7 @@ class TestInference:
         assert "location" in call.arguments
         assert "San Francisco" in call.arguments["location"]
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="session")
     async def test_chat_completion_with_tool_calling_streaming(
         self,
         inference_model,
@@ -409,6 +424,14 @@ class TestInference:
         sample_tool_definition,
     ):
         inference_impl, _ = inference_stack
+        provider = inference_impl.routing_table.get_provider_impl(inference_model)
+        if (
+            provider.__provider_spec__.provider_type == "remote::groq"
+            and "Llama-3.2" in inference_model
+        ):
+            # TODO(aidand): Remove this skip once Groq's tool calling for Llama3.2 works better
+            pytest.skip("Groq's tool calling for Llama3.2 doesn't work very well")
+
         messages = sample_messages + [
             UserMessage(
                 content="What's the weather like in San Francisco?",
@@ -425,7 +448,6 @@ class TestInference:
                 **common_params,
             )
         ]
-
         assert len(response) > 0
         assert all(
             isinstance(chunk, ChatCompletionResponseStreamChunk) for chunk in response
@@ -444,7 +466,7 @@ class TestInference:
 
         if "Llama3.1" in inference_model:
             assert all(
-                isinstance(chunk.event.delta, ToolCallDelta)
+                chunk.event.delta.type == "tool_call"
                 for chunk in grouped[ChatCompletionResponseEventType.progress]
             )
             first = grouped[ChatCompletionResponseEventType.progress][0]
@@ -455,7 +477,7 @@ class TestInference:
 
         last = grouped[ChatCompletionResponseEventType.progress][-1]
         # assert last.event.stop_reason == expected_stop_reason
-        assert last.event.delta.parse_status == ToolCallParseStatus.success
+        assert last.event.delta.parse_status == ToolCallParseStatus.succeeded
         assert isinstance(last.event.delta.content, ToolCall)
 
         call = last.event.delta.content

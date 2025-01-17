@@ -113,7 +113,11 @@ class NVIDIAInferenceAdapter(Inference, ModelRegistryHelper):
         # make sure the client lives longer than any async calls
         self._client = AsyncOpenAI(
             base_url=f"{self._config.url}/v1",
-            api_key=self._config.api_key or "NO KEY",
+            api_key=(
+                self._config.api_key.get_secret_value()
+                if self._config.api_key
+                else "NO KEY"
+            ),
             timeout=self._config.timeout,
         )
 
@@ -171,9 +175,7 @@ class NVIDIAInferenceAdapter(Inference, ModelRegistryHelper):
         response_format: Optional[ResponseFormat] = None,
         tools: Optional[List[ToolDefinition]] = None,
         tool_choice: Optional[ToolChoice] = ToolChoice.auto,
-        tool_prompt_format: Optional[
-            ToolPromptFormat
-        ] = None,  # API default is ToolPromptFormat.json, we default to None to detect user input
+        tool_prompt_format: Optional[ToolPromptFormat] = None,
         stream: Optional[bool] = False,
         logprobs: Optional[LogProbConfig] = None,
     ) -> Union[

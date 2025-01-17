@@ -9,6 +9,7 @@
 LLAMA_MODELS_DIR=${LLAMA_MODELS_DIR:-}
 LLAMA_STACK_DIR=${LLAMA_STACK_DIR:-}
 TEST_PYPI_VERSION=${TEST_PYPI_VERSION:-}
+PYPI_VERSION=${PYPI_VERSION:-}
 BUILD_PLATFORM=${BUILD_PLATFORM:-}
 
 if [ "$#" -lt 4 ]; then
@@ -51,7 +52,19 @@ add_to_docker() {
   fi
 }
 
-add_to_docker <<EOF
+# Update and install UBI9 components if UBI9 base image is used
+if [[ $docker_base == *"registry.access.redhat.com/ubi9"* ]]; then
+  add_to_docker << EOF
+FROM $docker_base
+WORKDIR /app
+
+RUN microdnf -y update && microdnf install -y iputils net-tools wget \
+    vim-minimal python3.11 python3.11-pip python3.11-wheel \
+    python3.11-setuptools && ln -s /bin/pip3.11 /bin/pip && ln -s /bin/python3.11 /bin/python && microdnf clean all
+
+EOF
+else
+  add_to_docker << EOF
 FROM $docker_base
 WORKDIR /app
 
@@ -64,17 +77,22 @@ RUN apt-get update && apt-get install -y \
        && rm -rf /var/lib/apt/lists/*
 
 EOF
+fi
 
 # Add pip dependencies first since llama-stack is what will change most often
 # so we can reuse layers.
 if [ -n "$pip_dependencies" ]; then
-  add_to_docker "RUN pip install --no-cache $pip_dependencies"
+  add_to_docker << EOF
+RUN pip install --no-cache $pip_dependencies
+EOF
 fi
 
 if [ -n "$special_pip_deps" ]; then
   IFS='#' read -ra parts <<<"$special_pip_deps"
   for part in "${parts[@]}"; do
-    add_to_docker "RUN pip install --no-cache $part"
+    add_to_docker <<EOF
+RUN pip install --no-cache $part
+EOF
   done
 fi
 
@@ -90,17 +108,29 @@ if [ -n "$LLAMA_STACK_DIR" ]; then
   # Install in editable format. We will mount the source code into the container
   # so that changes will be reflected in the container without having to do a
   # rebuild. This is just for development convenience.
-  add_to_docker "RUN pip install --no-cache -e $stack_mount"
+  add_to_docker << EOF
+RUN pip install --no-cache -e $stack_mount
+EOF
 else
   if [ -n "$TEST_PYPI_VERSION" ]; then
     # these packages are damaged in test-pypi, so install them first
-    add_to_docker "RUN pip install fastapi libcst"
-    add_to_docker <<EOF
+    add_to_docker << EOF
+RUN pip install fastapi libcst
+EOF
+    add_to_docker << EOF
 RUN pip install --no-cache --extra-index-url https://test.pypi.org/simple/ \
   llama-models==$TEST_PYPI_VERSION llama-stack-client==$TEST_PYPI_VERSION llama-stack==$TEST_PYPI_VERSION
+
 EOF
   else
-    add_to_docker "RUN pip install --no-cache llama-stack"
+    if [ -n "$PYPI_VERSION" ]; then
+      SPEC_VERSION="llama-stack==${PYPI_VERSION} llama-models==${PYPI_VERSION} llama-stack-client==${PYPI_VERSION}"
+    else
+      SPEC_VERSION="llama-stack"
+    fi
+    add_to_docker << EOF
+RUN pip install --no-cache $SPEC_VERSION
+EOF
   fi
 fi
 
@@ -110,14 +140,14 @@ if [ -n "$LLAMA_MODELS_DIR" ]; then
     exit 1
   fi
 
-  add_to_docker <<EOF
+  add_to_docker << EOF
 RUN pip uninstall -y llama-models
 RUN pip install --no-cache $models_mount
 
 EOF
 fi
 
-add_to_docker <<EOF
+add_to_docker << EOF
 
 # This would be good in production but for debugging flexibility lets not add it right now
 # We need a more solid production ready entrypoint.sh anyway
@@ -126,7 +156,7 @@ ENTRYPOINT ["python", "-m", "llama_stack.distribution.server.server", "--templat
 
 EOF
 
-printf "Dockerfile created successfully in $TEMP_DIR/Dockerfile"
+printf "Dockerfile created successfully in $TEMP_DIR/Dockerfile\n\n"
 cat $TEMP_DIR/Dockerfile
 printf "\n"
 

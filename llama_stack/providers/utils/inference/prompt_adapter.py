@@ -14,7 +14,6 @@ from typing import List, Optional, Tuple, Union
 
 import httpx
 from llama_models.datatypes import is_multimodal, ModelFamily
-
 from llama_models.llama3.api.chat_format import ChatFormat
 from llama_models.llama3.api.datatypes import (
     RawContent,
@@ -40,9 +39,7 @@ from llama_stack.apis.common.content_types import (
     InterleavedContent,
     InterleavedContentItem,
     TextContentItem,
-    URL,
 )
-
 from llama_stack.apis.inference import (
     ChatCompletionRequest,
     CompletionRequest,
@@ -53,7 +50,6 @@ from llama_stack.apis.inference import (
     ToolChoice,
     UserMessage,
 )
-
 from llama_stack.providers.utils.inference import supported_inference_models
 
 log = logging.getLogger(__name__)
@@ -117,27 +113,31 @@ async def interleaved_content_convert_to_raw(
         elif isinstance(c, TextContentItem):
             return RawTextItem(text=c.text)
         elif isinstance(c, ImageContentItem):
-            # load image and return PIL version
-            img = c.data
-            if isinstance(img, URL):
-                if img.uri.startswith("data"):
-                    match = re.match(r"data:image/(\w+);base64,(.+)", img.uri)
+            if c.url:
+                # Load image bytes from URL
+                if c.url.uri.startswith("data"):
+                    match = re.match(r"data:image/(\w+);base64,(.+)", c.url.uri)
                     if not match:
-                        raise ValueError("Invalid data URL format")
+                        raise ValueError(
+                            f"Invalid data URL format, {c.url.uri[:40]}..."
+                        )
                     _, image_data = match.groups()
                     data = base64.b64decode(image_data)
-                elif img.uri.startswith("file://"):
-                    path = img.uri[len("file://") :]
+                elif c.url.uri.startswith("file://"):
+                    path = c.url.uri[len("file://") :]
                     with open(path, "rb") as f:
                         data = f.read()  # type: ignore
-                elif img.uri.startswith("http"):
+                elif c.url.uri.startswith("http"):
                     async with httpx.AsyncClient() as client:
-                        response = await client.get(img.uri)
+                        response = await client.get(c.url.uri)
                         data = response.content
                 else:
                     raise ValueError("Unsupported URL type")
-            else:
+            elif c.data:
                 data = c.data
+            else:
+                raise ValueError("No data or URL provided")
+
             return RawMediaItem(data=data)
         else:
             raise ValueError(f"Unsupported content type: {type(c)}")
@@ -227,9 +227,11 @@ async def completion_request_to_prompt_model_input_info(
 def augment_content_with_response_format_prompt(response_format, content):
     if fmt_prompt := response_format_prompt(response_format):
         if isinstance(content, list):
-            return content + [fmt_prompt]
+            return content + [TextContentItem(text=fmt_prompt)]
+        elif isinstance(content, str):
+            return [TextContentItem(text=content), TextContentItem(text=fmt_prompt)]
         else:
-            return [content, fmt_prompt]
+            return [content, TextContentItem(text=fmt_prompt)]
 
     return content
 
@@ -267,6 +269,7 @@ def chat_completion_request_to_messages(
     For eg. for llama_3_1, add system message with the appropriate tools or
     add user messsage for custom tools, etc.
     """
+    assert llama_model is not None, "llama_model is required"
     model = resolve_model(llama_model)
     if model is None:
         log.error(f"Could not resolve model {llama_model}")
@@ -360,14 +363,13 @@ def augment_messages_for_tools_llama_3_1(
 
     has_custom_tools = any(isinstance(dfn.tool_name, str) for dfn in request.tools)
     if has_custom_tools:
-        if request.tool_prompt_format == ToolPromptFormat.json:
+        fmt = request.tool_prompt_format or ToolPromptFormat.json
+        if fmt == ToolPromptFormat.json:
             tool_gen = JsonCustomToolGenerator()
-        elif request.tool_prompt_format == ToolPromptFormat.function_tag:
+        elif fmt == ToolPromptFormat.function_tag:
             tool_gen = FunctionTagCustomToolGenerator()
         else:
-            raise ValueError(
-                f"Non supported ToolPromptFormat {request.tool_prompt_format}"
-            )
+            raise ValueError(f"Non supported ToolPromptFormat {fmt}")
 
         custom_tools = [t for t in request.tools if isinstance(t.tool_name, str)]
         custom_template = tool_gen.gen(custom_tools)
@@ -412,7 +414,8 @@ def augment_messages_for_tools_llama_3_2(
 
     custom_tools = [dfn for dfn in request.tools if isinstance(dfn.tool_name, str)]
     if custom_tools:
-        if request.tool_prompt_format != ToolPromptFormat.python_list:
+        fmt = request.tool_prompt_format or ToolPromptFormat.python_list
+        if fmt != ToolPromptFormat.python_list:
             raise ValueError(
                 f"Non supported ToolPromptFormat {request.tool_prompt_format}"
             )

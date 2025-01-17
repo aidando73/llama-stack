@@ -338,8 +338,8 @@ distribution_spec:
     inference: remote::ollama
     memory: inline::faiss
     safety: inline::llama-guard
-    agents: meta-reference
-    telemetry: meta-reference
+    agents: inline::meta-reference
+    telemetry: inline::meta-reference
 image_type: conda
 ```
 
@@ -402,11 +402,11 @@ Serving API agents
  POST /agents/step/get
  POST /agents/turn/get
 
-Listening on ['::', '0.0.0.0']:5000
+Listening on ['::', '0.0.0.0']:8321
 INFO:     Started server process [2935911]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://['::', '0.0.0.0']:5000 (Press CTRL+C to quit)
+INFO:     Uvicorn running on http://['::', '0.0.0.0']:8321 (Press CTRL+C to quit)
 INFO:     2401:db00:35c:2d2b:face:0:c9:0:54678 - "GET /models/list HTTP/1.1" 200 OK
 ```
 

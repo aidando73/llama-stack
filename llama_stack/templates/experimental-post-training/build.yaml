@@ -10,9 +10,11 @@ distribution_spec:
     - inline::meta-reference
     scoring:
     - inline::basic
+    - inline::braintrust
     post_training:
     - inline::torchtune
     datasetio:
+    - inline::localfs
     - remote::huggingface
     telemetry:
     - inline::meta-reference
@@ -22,4 +24,6 @@ distribution_spec:
     - inline::llama-guard
     memory:
     - inline::faiss
+    tool_runtime:
+    - remote::brave-search
 image_type: conda

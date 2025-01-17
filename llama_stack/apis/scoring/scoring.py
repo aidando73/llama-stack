@@ -11,7 +11,6 @@ from pydantic import BaseModel
 
 from llama_stack.apis.scoring_functions import ScoringFn, ScoringFnParams
 
-
 # mapping of metric to value
 ScoringResultRow = Dict[str, Any]
 
@@ -43,17 +42,17 @@ class ScoringFunctionStore(Protocol):
 class Scoring(Protocol):
     scoring_function_store: ScoringFunctionStore
 
-    @webmethod(route="/scoring/score-batch")
+    @webmethod(route="/scoring/score-batch", method="POST")
     async def score_batch(
         self,
         dataset_id: str,
-        scoring_functions: Dict[str, Optional[ScoringFnParams]] = None,
+        scoring_functions: Dict[str, Optional[ScoringFnParams]],
         save_results_dataset: bool = False,
     ) -> ScoreBatchResponse: ...
 
-    @webmethod(route="/scoring/score")
+    @webmethod(route="/scoring/score", method="POST")
     async def score(
         self,
         input_rows: List[Dict[str, Any]],
-        scoring_functions: Dict[str, Optional[ScoringFnParams]] = None,
+        scoring_functions: Dict[str, Optional[ScoringFnParams]],
     ) -> ScoreResponse: ...
