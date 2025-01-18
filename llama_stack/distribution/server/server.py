@@ -250,7 +250,7 @@ class ClientVersionMiddleware:
                     server_version_parts = tuple(
                         map(int, self.server_version.split(".")[:2])
                     )
-                    if client_version_parts != server_version_parts:
+                    if False and client_version_parts != server_version_parts:
 
                         async def send_version_error(send):
                             await send(
