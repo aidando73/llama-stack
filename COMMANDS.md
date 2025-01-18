@@ -39,6 +39,8 @@ conda activate llamastack-vllm
 pip install attrs>=21.3.0
 pip install -e git+https://github.com/meta-llama/llama-models.git#egg=llama-models
 
+#Add to .envrc
+export VLLM_HOST=
 
 export INFERENCE_MODEL=unsloth/Llama-3.3-70B-Instruct-bnb-4bit && \
 pip install -e . && \
@@ -47,7 +49,7 @@ llama stack build --template remote-vllm --image-type conda && \
 llama stack run ./distributions/remote-vllm/run.yaml \
   --port 5000 \
   --env INFERENCE_MODEL=$INFERENCE_MODEL \
-  --env VLLM_URL=http://localhost:8000/v1 | tee -a llama-stack.log
+  --env VLLM_URL=http://$VLLM_HOST:8000/v1 | tee -a llama-stack.log
 
 # Fireworks build from source
 pip install -e . \
