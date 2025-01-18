@@ -50,6 +50,7 @@ llama stack run ./distributions/remote-vllm/run.yaml \
 
 # Fireworks build from source
 pip install -e . \
+pip install --no-cache --index-url https://pypi.org/simple/ --extra-index-url https://test.pypi.org/simple/ llama-stack==0.1.0rc7 \
 && llama stack build --config distributions/fireworks/build.yaml --image-type conda \
 && stdbuf --output=L llama stack run distributions/fireworks/run.yaml \
   --port 5000 | tee -a llama-stack.log
