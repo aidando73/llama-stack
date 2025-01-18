@@ -42,6 +42,7 @@ pip install -e git+https://github.com/meta-llama/llama-models.git#egg=llama-mode
 
 export INFERENCE_MODEL=unsloth/Llama-3.3-70B-Instruct-bnb-4bit && \
 pip install -e . && \
+pip install --no-cache --index-url https://pypi.org/simple/ --extra-index-url https://test.pypi.org/simple/ llama-stack==0.1.0rc7 && \
 llama stack build --template remote-vllm --image-type conda && \
 llama stack run ./distributions/remote-vllm/run.yaml \
   --port 5000 \
