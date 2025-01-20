@@ -152,6 +152,7 @@ class FireworksInferenceAdapter(
     ) -> CompletionResponse:
         params = await self._get_params(request)
         r = await self._get_client().completion.acreate(**params)
+        print(r)
         return process_completion_response(r, self.formatter)
 
     async def _stream_completion(self, request: CompletionRequest) -> AsyncGenerator:
@@ -210,8 +211,12 @@ class FireworksInferenceAdapter(
         logprobs: Optional[LogProbConfig] = None,
     ) -> AsyncGenerator:
         model = await self.model_store.get_model(model_id)
+        if model.identifier == "meta-llama/Llama-3.1-405B-Instruct-FP8":
+            model_id = "accounts/fireworks/models/llama-v3p1-405b-instruct"
+        else:
+            model_id = model.provider_resource_id
         request = ChatCompletionRequest(
-            model=model.provider_resource_id,
+            model=model_id,
             messages=messages,
             sampling_params=sampling_params,
             tools=tools or [],
@@ -241,13 +246,14 @@ class FireworksInferenceAdapter(
         self, request: ChatCompletionRequest
     ) -> AsyncGenerator:
         params = await self._get_params(request)
-
         async def _to_async_generator():
             if "messages" in params:
                 stream = self._get_client().chat.completions.acreate(**params)
             else:
+                print(f"\033[34m{params['prompt']}\033[0m")
                 stream = self._get_client().completion.acreate(**params)
             async for chunk in stream:
+                print(f"\033[36m{chunk.choices[0].text}\033[0m", end="")
                 yield chunk
 
         stream = _to_async_generator()
