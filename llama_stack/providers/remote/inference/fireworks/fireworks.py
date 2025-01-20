@@ -246,13 +246,14 @@ class FireworksInferenceAdapter(
         self, request: ChatCompletionRequest
     ) -> AsyncGenerator:
         params = await self._get_params(request)
-
         async def _to_async_generator():
             if "messages" in params:
                 stream = self._get_client().chat.completions.acreate(**params)
             else:
+                print(f"\033[34m{params['prompt']}\033[0m")
                 stream = self._get_client().completion.acreate(**params)
             async for chunk in stream:
+                print(f"\033[36m{chunk.choices[0].text}\033[0m", end="")
                 yield chunk
 
         stream = _to_async_generator()

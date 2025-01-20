@@ -39,17 +39,19 @@ conda activate llamastack-vllm
 pip install attrs>=21.3.0
 pip install -e git+https://github.com/meta-llama/llama-models.git#egg=llama-models
 
+pip install mcp datasets autoevals
+
 #Add to .envrc
 export VLLM_HOST=
 
-export INFERENCE_MODEL=unsloth/Llama-3.3-70B-Instruct-bnb-4bit && \
+export INFERENCE_MODEL=/root/dev/hello-fine-tune/llama-3.3-70b-instruct-code-agent-fine-tune-v1-base-4b-quantized && \
 pip install -e . && \
 pip install --no-cache --index-url https://pypi.org/simple/ --extra-index-url https://test.pypi.org/simple/ llama-stack==0.1.0rc7 && \
 llama stack build --template remote-vllm --image-type conda && \
 llama stack run ./distributions/remote-vllm/run.yaml \
   --port 5000 \
   --env INFERENCE_MODEL=$INFERENCE_MODEL \
-  --env VLLM_URL=http://$VLLM_HOST:8000/v1 | tee -a llama-stack.log
+  --env VLLM_URL=$VLLM_HOST/v1 | tee -a llama-stack.log
 
 # Fireworks build from source
 pip install -e . \
