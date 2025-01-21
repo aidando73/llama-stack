@@ -44,7 +44,8 @@ pip install mcp datasets autoevals
 #Add to .envrc
 export VLLM_HOST=
 
-export INFERENCE_MODEL=/root/dev/hello-fine-tune/llama-3.3-70b-instruct-code-agent-fine-tune-v1-base-4b-quantized && \
+# export INFERENCE_MODEL=/root/dev/hello-fine-tune/llama-3.3-70b-instruct-code-agent-fine-tune-v1-base-4b-quantized && \
+export INFERENCE_MODEL=aidando73/llama-3.3-70b-instruct-code-agent-fine-tune-v1-base-4b-quantized && \
 pip install -e . && \
 pip install --no-cache --index-url https://pypi.org/simple/ --extra-index-url https://test.pypi.org/simple/ llama-stack==0.1.0rc7 && \
 llama stack build --template remote-vllm --image-type conda && \
