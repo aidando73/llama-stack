@@ -61,3 +61,9 @@ pip install -e . \
 && stdbuf --output=L llama stack run distributions/fireworks/run.yaml \
   --port 5000 | tee -a llama-stack.log
 ```
+
+
+```
+sudo apt install nginx
+
+```
