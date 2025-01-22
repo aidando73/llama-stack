@@ -19,3 +19,9 @@ Package.resolved
 _build
 docs/src
 pyrightconfig.json
+.envrc
+env/
+build.yaml
+llama-pipe
+run.yaml
+messages.json
