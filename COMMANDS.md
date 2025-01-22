@@ -66,7 +66,10 @@ pip install -e . \
 ```bash
 sudo apt install nginx
 # Start nginx locally using the config file
-sudo nginx -c $(pwd)/nginx.conf -g "daemon off; pid /run/nginx.pid; error_log stderr; http { server { listen 8080; } }"
+screen -S nginx
+sudo nginx -c $(pwd)/nginx.conf # Run in foreground mode
+# Reload nginx
+sudo nginx -s reload
 
 # Tail nginx logs
 sudo tail -f /var/log/nginx/access.log /var/log/nginx/error.log
